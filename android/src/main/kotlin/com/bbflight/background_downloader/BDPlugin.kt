@@ -1193,6 +1193,7 @@ class BDPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
      *
      * - requirement is first argument (enum)
      * - rescheduleRunning is second argument (bool)
+     * - rescheduleUploads is third argument (bool)
      *
      * Returns true always
      */
@@ -1200,11 +1201,13 @@ class BDPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         val args = call.arguments as List<*>
         val newRequireWiFi = RequireWiFi.entries[args[0] as Int]
         val rescheduleRunning = args[1] as Boolean
+        val rescheduleUploads = args[2] as Boolean
         WiFi.requireWiFiChange(
             RequireWiFiChange(
                 applicationContext,
                 newRequireWiFi,
-                rescheduleRunning
+                rescheduleRunning,
+                rescheduleUploads
             )
         )
         true

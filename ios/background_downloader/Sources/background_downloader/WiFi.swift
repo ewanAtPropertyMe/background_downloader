@@ -27,7 +27,7 @@ class WiFiQueue {
     private init() {}
     
     // Change the application level WiFi requirement and re-enqueue tasks as necessary
-    func requireWiFiChange(requireWiFi: RequireWiFi, rescheduleRunningTasks: Bool) {
+    func requireWiFiChange(requireWiFi: RequireWiFi, rescheduleRunningTasks: Bool, rescheduleUploads: Bool) {
         requireWiFiChangeQueue.async {
             _Concurrency.Task {
                 BDPlugin.requireWiFi = requireWiFi
@@ -41,31 +41,43 @@ class WiFiQueue {
                 }
                 var haveReEnqueued = false
                 urlSessionTasks.forEach { urlSessionTask in
-                    if (urlSessionTask is URLSessionDownloadTask && (urlSessionTask.state == .running || urlSessionTask.state == .suspended)) {
-                        guard let task = getTaskFrom(urlSessionTask: urlSessionTask) else {
-                            return
-                        }
-                        BDPlugin.propertyLock.withLock {
-                            if taskRequiresWiFi(task: task) != BDPlugin.taskIdsRequiringWiFi.contains(task.taskId) {
-                                // requirement differs, so we need to re-enqueue
-                                if taskRequiresWiFi(task: task) {
-                                    BDPlugin.taskIdsRequiringWiFi.insert(task.taskId)
-                                } else {
-                                    BDPlugin.taskIdsRequiringWiFi.remove(task.taskId)
-                                }
-                                if BDPlugin.progressInfo[task.taskId] == nil {
-                                    // enqueued only, so ensure it is re-enqueued and cancel
+                    // Only download tasks are rescheduled, unless rescheduleUploads is set
+                    // in which case upload tasks are re-queued as well
+                    guard urlSessionTask is URLSessionDownloadTask || (rescheduleUploads && urlSessionTask is URLSessionUploadTask) else {
+                        return
+                    }
+                    guard urlSessionTask.state == .running || urlSessionTask.state == .suspended else {
+                        return
+                    }
+                    guard let task = getTaskFrom(urlSessionTask: urlSessionTask) else {
+                        return
+                    }
+                    BDPlugin.propertyLock.withLock {
+                        if taskRequiresWiFi(task: task) != BDPlugin.taskIdsRequiringWiFi.contains(task.taskId) {
+                            // requirement differs, so we need to re-enqueue
+                            if taskRequiresWiFi(task: task) {
+                                BDPlugin.taskIdsRequiringWiFi.insert(task.taskId)
+                            } else {
+                                BDPlugin.taskIdsRequiringWiFi.remove(task.taskId)
+                            }
+                            if BDPlugin.progressInfo[task.taskId] == nil {
+                                // enqueued only, so ensure it is re-enqueued and cancel
+                                haveReEnqueued = true
+                                BDPlugin.tasksToReEnqueue.insert(task)
+                                urlSessionTask.cancel()
+                            } else {
+                                if rescheduleRunningTasks {
+                                    // already running, so re-enqueue it
                                     haveReEnqueued = true
                                     BDPlugin.tasksToReEnqueue.insert(task)
-                                    urlSessionTask.cancel()
-                                } else {
-                                    if rescheduleRunningTasks {
-                                        // already running, so pause instead of cancel
-                                        haveReEnqueued = true
-                                        BDPlugin.tasksToReEnqueue.insert(task)
+                                    if let downloadTask = urlSessionTask as? URLSessionDownloadTask {
+                                        // pause instead of cancel to preserve progress
                                         _Concurrency.Task{
-                                            await (urlSessionTask as! URLSessionDownloadTask).cancelByProducingResumeData()
+                                            await downloadTask.cancelByProducingResumeData()
                                         }
+                                    } else {
+                                        // uploads cannot be resumed, so simply cancel
+                                        urlSessionTask.cancel()
                                     }
                                 }
                             }

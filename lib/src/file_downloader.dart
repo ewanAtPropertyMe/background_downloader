@@ -798,11 +798,19 @@ interface class FileDownloader {
   /// Affects future tasks and reschedules enqueued, inactive tasks
   /// with the new setting.
   /// Reschedules running tasks if [rescheduleRunningTasks] is true,
-  /// otherwise leaves those running with their prior setting
+  /// otherwise leaves those running with their prior setting.
+  /// By default only download tasks are rescheduled. If [rescheduleUploads]
+  /// is true, queued and running upload tasks are also re-queued (uploads
+  /// cannot be resumed, so they restart from the beginning)
   Future<bool> requireWiFi(
     RequireWiFi requirement, {
     final rescheduleRunningTasks = true,
-  }) => _downloader.requireWiFi(requirement, rescheduleRunningTasks);
+    final rescheduleUploads = false,
+  }) => _downloader.requireWiFi(
+    requirement,
+    rescheduleRunningTasks,
+    rescheduleUploads,
+  );
 
   /// Returns the current global setting for requiring WiFi
   Future<RequireWiFi> getRequireWiFiSetting() =>

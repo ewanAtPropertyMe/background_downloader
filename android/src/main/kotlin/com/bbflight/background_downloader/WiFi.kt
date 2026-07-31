@@ -73,7 +73,8 @@ object WiFi {
 class RequireWiFiChange(
     private val applicationContext: Context,
     private val requireWifi: RequireWiFi,
-    private val rescheduleRunningTasks: Boolean
+    private val rescheduleRunningTasks: Boolean,
+    private val rescheduleUploads: Boolean
 ) {
     /**
      * Execute the change in WiFi requirement and return
@@ -96,7 +97,9 @@ class RequireWiFiChange(
             if (tags.isNotEmpty()) {
                 val taskId = tags.first().substring(7)
                 val task = tasksMap[taskId]
-                if (task != null && task.isDownloadTask()) {
+                // Only download tasks are rescheduled, unless rescheduleUploads is set
+                // in which case upload tasks are re-queued as well
+                if (task != null && (task.isDownloadTask() || (rescheduleUploads && task.isUploadTask()))) {
                     if (BDPlugin.taskRequiresWifi(task) != BDPlugin.taskIdsRequiringWiFi.contains(
                             task.taskId
                         )
@@ -123,7 +126,19 @@ class RequireWiFiChange(
                                 if (rescheduleRunningTasks) {
                                     haveReEnqueued = true
                                     BDPlugin.tasksToReEnqueue.add(task)
-                                    BDPlugin.pauseTaskWithId(task.taskId)
+                                    if (task.isDownloadTask()) {
+                                        BDPlugin.pauseTaskWithId(task.taskId)
+                                    } else {
+                                        // Upload tasks can't be paused, they must be cancelled
+                                        if (!BDPlugin.cancelActiveTaskWithId(
+                                                applicationContext,
+                                                task.taskId,
+                                                workManager
+                                            )
+                                        ) {
+                                            BDPlugin.tasksToReEnqueue.remove(task)
+                                        }
+                                    }
                                 }
                             }
 

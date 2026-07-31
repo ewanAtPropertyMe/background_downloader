@@ -783,6 +783,7 @@ public class BDPlugin: NSObject, FlutterPlugin, UNUserNotificationCenterDelegate
      *
      * - requirement is first argument (enum)
      * - rescheduleRunning is second argument (bool)
+     * - rescheduleUploads is third argument (bool)
      *
      * Returns true if successful
      */
@@ -793,7 +794,8 @@ public class BDPlugin: NSObject, FlutterPlugin, UNUserNotificationCenterDelegate
             return
         }
         let rescheduleRunning = args[1] as? Bool ?? false
-        WiFiQueue.shared.requireWiFiChange(requireWiFi: newRequireWiFi, rescheduleRunningTasks: rescheduleRunning)
+        let rescheduleUploads = args[2] as? Bool ?? false
+        WiFiQueue.shared.requireWiFiChange(requireWiFi: newRequireWiFi, rescheduleRunningTasks: rescheduleRunning, rescheduleUploads: rescheduleUploads)
         result(true)
     }
     
