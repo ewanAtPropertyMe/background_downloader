@@ -1,0 +1,32 @@
+ios/background_downloader/Sources/background_downloader/BDPlugin.swift
+  s_b5345d2f26a72a::t_6f807e55093522 786,797-798
+android/src/main/kotlin/com/bbflight/background_downloader/WiFi.kt
+  s_b5345d2f26a72a::t_0034bdc4d20719 76-77
+  s_b5345d2f26a72a::t_a8360304c95bf9 100-102
+android/src/main/kotlin/com/bbflight/background_downloader/BDPlugin.kt
+  s_b5345d2f26a72a::t_ebca9ddff1d801 1196,1204,1209-1210
+lib/src/native_downloader.dart
+  s_b5345d2f26a72a::t_fff81af916187c 394,399
+lib/src/base_downloader.dart
+  s_b5345d2f26a72a::t_70f5f899aff8e1 679-685
+lib/src/file_downloader.dart
+  s_b5345d2f26a72a::t_b90cc6b09c6ee5 801-804,808-813
+ios/background_downloader/Sources/background_downloader/WiFi.swift
+  s_b5345d2f26a72a::t_e266f9978b17cf 44-70,73-74
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.19",
+  "base_commit_sha": "edd2e11f0253631e7b1761223099405b3797733e",
+  "prompts": {},
+  "sessions": {
+    "s_b5345d2f26a72a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9a2b771a-4820-49bd-a8c8-4f45fdc22dc9",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ewan Vaughan <ewanvaughan@propertyme.com>"
+    }
+  }
+}
